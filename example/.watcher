@@ -1,0 +1,26 @@
+# text to single a error in your app -- will uptick w_err
+error_messages: [Error, Exception]
+
+# list of email addresses to notify upon an error
+notify: [bill@example.com, fred@example.com]
+
+# Currently we only support sending out emails if you have a gmail account
+# if either of these is blank, we will not send out an email
+gmail_username: bill@example.com
+gmail_password: sekret
+
+# interval in seconds to ping mongostat and to output and summarize data
+interval: 60
+
+# to connect to mongostat
+mongo_host: 'my-dbawesome-db.member0.mongolayer.com'
+mongo_username: 'ninja'
+mongo_password: 'skret'
+
+# to connect to heroku app
+# note you already need to have the heroku gem installed
+# with creditails already set up for this directory
+heroku_appname: 'my-heroku-app-name'
+
+#if you have multiple accounts
+heroku_account: 'my-heroku-account'
