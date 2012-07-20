@@ -10,7 +10,8 @@ module HerokuMongoWatcher::Configuration
       mongo_username: '',
       mongo_password: '',
       heroku_appname: '',
-      heroku_account: ''
+      heroku_account: '',
+      display_errors: true
   }
 
   @@valid_config_keys = @@config.keys

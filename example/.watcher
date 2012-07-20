@@ -24,3 +24,6 @@ heroku_appname: 'my-heroku-app-name'
 
 #if you have multiple accounts
 heroku_account: 'my-heroku-account'
+
+# If you want to display the list of errors in the logs
+display_errors: true

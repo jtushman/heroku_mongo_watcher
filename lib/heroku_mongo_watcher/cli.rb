@@ -154,7 +154,7 @@ class HerokuMongoWatcher::CLI
   end
 
   def self.print_errors
-    if @errors && @errors.keys && @errors.keys.length > 0
+    if config[:print_errors] &&@errors && @errors.keys && @errors.keys.length > 0
       @errors.each do |error,count|
         puts "\t\t[#{count}] #{error}"
       end
@@ -265,7 +265,8 @@ class HerokuMongoWatcher::CLI
 
   def self.notify(msg)
     Thread.new('notify_admins') do
-      notify.each { |user_email| send_email(user_email, msg) } unless notify.empty?
+      subscribers = config[:notify]
+      subscribers.each { |user_email| send_email(user_email, msg) } unless subscribers.empty?
     end
   end
 
@@ -280,9 +281,7 @@ class HerokuMongoWatcher::CLI
   end
 
   def self.send_email(to, msg)
-
     return unless config[:gmail_username] && config[:gmail_password]
-
     content = [
         "From: Mongo Watcher <#{config[:gmail_username]}>",
         "To: #{to}",
@@ -299,8 +298,6 @@ class HerokuMongoWatcher::CLI
     Net::SMTP.start('smtp.gmail.com', 587, 'gmail.com', config[:gmail_username], config[:gmail_password], :login) do |smtp|
       smtp.send_message(content, config[:gmail_username], to)
     end
-
-
   end
 
   def self.color_print(field, options ={})
