@@ -27,25 +27,25 @@ The output looks like the following ...
       20  23935    190   7144      0     43      0      0            /crossdomain.xml|    307      0    618      1   21.6    0|0   260k   221k  15:05:19
 
 ### Legend
-<dl>
-    <dt>dynos</dt><dd>Number of running web instances</dd>
-    <dt>reqs</dt><dd>number of requests per sample</dd>
-    <dt>art</dt><dd>average request time</dd>
-    <dt>max</dt><dd>max request time</dd>
-    <dt>r_err</dt><dd>number of router errors, i.e. timeouts</dd>
-    <dt>w_err</dt><dd>number of web errros (see below)</dd>
-    <dt>wait</dt><dd>average router wait</dd>
-    <dt>queue</dt><dd>average router queue</dd>
-    <dt>slowest</dt><dd>path of the url that corresponds to the max request time</dd>
-    <dt>insert</dt><dd>number of mongo inserts</dd>
-    <dt>query</dt><dd>number of mongo queries</dd>
-    <dt>update</dt><dd>number of mongo updates</dd>
-    <dt>faults</dt><dd>number of mongo page faults</dd>
-    <dt>qr|qw</dt><dd>number of mongo's queued read and writes</dd>
-    <dt>netIn</dt><dd>size on mongo net In</dd>
-    <dt>netIn</dt><dd>size on mongo net out</dd>
-    <dt>time</dt><dd>the time sampled</dd>
-</dl>
+<table>
+    <tr><td>dynos</td><td>Number of running web instances</td></tr>
+    <tr><td>reqs</td><td>number of requests per sample</td></tr>
+    <tr><td>art</td><td>average request time</td></tr>
+    <tr><td>max</td><td>max request time</td></tr>
+    <tr><td>r_err</td><td>number of router errors, i.e. timeouts</td></tr>
+    <tr><td>w_err</td><td>number of web errros (see below)</td></tr>
+    <tr><td>wait</td><td>average router wait</td></tr>
+    <tr><td>queue</td><td>average router queue</td></tr>
+    <tr><td>slowest</td><td>path of the url that corresponds to the max request time</td></tr>
+    <tr><td>insert</td><td>number of mongo inserts</td></tr>
+    <tr><td>query</td><td>number of mongo queries</td></tr>
+    <tr><td>update</td><td>number of mongo updates</td></tr>
+    <tr><td>faults</td><td>number of mongo page faults</td></tr>
+    <tr><td>qr|qw</td><td>number of mongo's queued read and writes</td></tr>
+    <tr><td>netIn</td><td>size on mongo net in</td></tr>
+    <tr><td>netOut</td><td>size on mongo net out</td></tr>
+    <tr><td>time</td><td>the time sampled</td></tr>
+</table>
 
 ### Web Errors (w_err)
 At least for me, one of the key features is aggregating signals from my web log (I look out for certain race conditions,
