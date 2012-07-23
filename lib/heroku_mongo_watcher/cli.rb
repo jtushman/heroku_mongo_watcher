@@ -114,7 +114,7 @@ class HerokuMongoWatcher::CLI
       notify "[SEVERE WARNING] Application not healthy | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_critical_notified
       # @art_critical_notified = true
     elsif @current_row.average_response_time > 500 || @current_row.total_router_errors > 10 || @current_row.total_requests > 30_000
-      notify "[WARNING] Application heating up | [#{@current_row.total_requests} rpm,#{avt} art]" unless @art_warning_notified
+      notify "[WARNING] Application heating up | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_warning_notified
       # @art_warning_notified = true
     elsif @current_row.average_response_time < 300
       if @art_warning_notified || @art_critical_notified

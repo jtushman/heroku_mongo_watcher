@@ -125,9 +125,9 @@ class HerokuMongoWatcher::DataRow
     print_errors
 
     color_print @dynos, length: 4
-    color_print @total_requests, warning: 30_000, critical: 50_000, bold: true
+    color_print @total_requests, warning: 30_000, critical: 50_000
     color_print average_response_time, warning: 1000, critical: 10_000, bold: true
-    color_print @max_service, warning: 10_000, critical: 20_000
+    color_print @max_service, warning: 20_000, critical: 27_000
     color_print @total_router_errors, warning: 1, critical: 10
     color_print @total_web_errors, warning: 1, critical: 10
     color_print average_wait, warning: 10, critical: 100
