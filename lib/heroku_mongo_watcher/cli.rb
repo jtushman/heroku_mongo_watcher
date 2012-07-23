@@ -40,7 +40,10 @@ class HerokuMongoWatcher::CLI
 
     # Call Tails heroku logs updates counts
     heroku_watcher = Thread.new('heroku_logs') do
-      IO.popen("heroku logs --tail --app #{config[:heroku_appname]} --account #{config[:heroku_account]}") do |f|
+
+      cmd_string = "heroku logs --tail --app #{config[:heroku_appname]}"
+      cmd_string = cmd_string + " --account #{config[:heroku_account]}" if config[:heroku_account]
+      IO.popen(cmd_string) do |f|
         while line = f.gets
           @mutex.synchronize do
             @current_row.process_heroku_router_line(line) if line.include? 'heroku[router]'
@@ -54,7 +57,9 @@ class HerokuMongoWatcher::CLI
     heroku_ps = Thread.new('heroku_ps') do
       while true do
         dynos = 0
-        IO.popen("heroku ps --app #{config[:heroku_appname]} --account #{config[:heroku_account]}") do |p|
+        cmd_string = "heroku ps --app #{config[:heroku_appname]}"
+        cmd_string = cmd_string + " --account #{config[:heroku_account]}" if config[:heroku_account]
+        IO.popen(cmd_string) do |p|
           while line = p.gets
             dynos += 1 if line =~ /^web/ && line.split(' ')[1] == 'up'
           end
@@ -123,6 +128,7 @@ class HerokuMongoWatcher::CLI
       @art_warning_notified = true
     elsif @current_row.average_response_time < 300 && @current_row.total_requests < 25_000
       if @art_warning_notified || @art_critical_notified
+        notify "[RESOLVED] | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]"
         @art_warning_notified = false
         @art_critical_notified = false
       end
@@ -131,8 +137,8 @@ class HerokuMongoWatcher::CLI
 
   def self.notify(msg)
     Thread.new('notify_admins') do
-      subscribers = config[:notify]
-      subscribers.each { |user_email| send_email(user_email, msg) } unless subscribers.empty?
+      subscribers = config[:notify] || []
+      subscribers.each { |user_email| send_email(user_email, msg) }
     end
   end
 
