@@ -130,7 +130,7 @@ class HerokuMongoWatcher::DataRow
 
     color_print @dynos, length: 4
     color_print @total_requests, warning: 30_000, critical: 50_000
-    color_print average_response_time, warning: 1000, critical: 10_000, bold: true
+    color_print average_response_time, warning: 500, critical: 1000, bold: true
     color_print @max_service, warning: 20_000
     color_print @total_router_errors, warning: 1
     color_print @total_web_errors, warning: 1

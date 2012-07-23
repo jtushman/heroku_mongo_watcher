@@ -117,11 +117,11 @@ class HerokuMongoWatcher::CLI
     return unless @current_row.total_requests > 200
     if @current_row.average_response_time > 10_000 || @current_row.error_rate > 1
       notify "[SEVERE WARNING] Application not healthy | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_critical_notified
-      # @art_critical_notified = true
+      @art_critical_notified = true
     elsif @current_row.average_response_time > 500 || @current_row.error_rate > 0.3 || @current_row.total_requests > 30_000
       notify "[WARNING] Application heating up | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_warning_notified
-      # @art_warning_notified = true
-    elsif @current_row.average_response_time < 300
+      @art_warning_notified = true
+    elsif @current_row.average_response_time < 300 && @current_row.total_requests < 25_000
       if @art_warning_notified || @art_critical_notified
         @art_warning_notified = false
         @art_critical_notified = false

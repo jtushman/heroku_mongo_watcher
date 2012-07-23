@@ -62,7 +62,7 @@ found (see output above), set to false it will just put the total in the summary
 
 ## To install
 
-1. bundle install heroku_mongo_watcher
+1. gem install heroku_mongo_watcher
 2. create a .watcher file (see the examples) in your user directory ~/.watcher
 3. then run `bundle exec watcher`
 4. Ctrl-C out to quit
