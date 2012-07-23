@@ -1,4 +1,7 @@
-module HerokuMongoWatcher::Configuration
+require 'singleton'
+
+class HerokuMongoWatcher::Configuration
+  include Singleton
 
   @@config = {
       error_messages: ['Error', 'Exception', 'Cannot find impression', 'Timed out running'],
@@ -11,10 +14,15 @@ module HerokuMongoWatcher::Configuration
       mongo_password: '',
       heroku_appname: '',
       heroku_account: '',
-      display_errors: true
+      print_errors: true
   }
 
   @@valid_config_keys = @@config.keys
+
+  def initialize
+    f = File.join(File.expand_path('~'),'.watcher')
+    configure_with(f)
+  end
 
   def config
     @@config
