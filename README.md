@@ -17,14 +17,14 @@ It needed to accomplish the following:
 
 The output looks like the following ...
 
-    |<---- heroku stats ------------------------------------------------------------>|<----mongo stats ------------------------------------------------------->|
-    dyno reqs       art    max    r_err w_err   wait  queue slowest                  | insert  query  update  faults locked qr|qw  netIn  netOut    time       |
-      20     76     27    586      0      0      0      0   /pxl/4fdbc97dc6b36c003000|      0      0      0      0      0    0|0   305b   257b  15:03:19
-      20   1592     62   1292      0      0      0      0   /assets/companions/5009ab|     17      2     32      0    1.2    0|0    14k    26k  15:04:19
+    |<---- heroku stats ----------------------------------------------------------------------->|<----mongo stats ------------------------------------------------------->|
+    dyno reqs       art    max    r_err w_err   %err    wait  queue slowest                     | insert  query  update  faults locked qr|qw  netI/O    time              |
+      20     76     27    586      0      0     0.0%        0      0   /pxl/4fdbc97dc6b36c003000|      0      0      0      0      0    0|0   305b/257b  15:03:19
+      20   1592     62   1292      0      0     0.0%        0      0   /assets/companions/5009ab|     17      2     32      0    1.2    0|0   14k/26k    15:04:19
     		[4] VAST Error
     		[28] Timeout::Error
     		[11] Cannot find impression when looking for asset
-      20  23935    190   7144      0     43      0      0            /crossdomain.xml|    307      0    618      1   21.6    0|0   260k   221k  15:05:19
+      20  23935    190   7144      0     43      0.0%       0       0           /crossdomain.xml|    307      0    618      1   21.6    0|0   260k/221k  15:05:19
 
 ### Legend
 <table>
@@ -42,8 +42,7 @@ The output looks like the following ...
     <tr><td>update</td><td>number of mongo updates</td></tr>
     <tr><td>faults</td><td>number of mongo page faults</td></tr>
     <tr><td>qr|qw</td><td>number of mongo's queued read and writes</td></tr>
-    <tr><td>netIn</td><td>size on mongo net in</td></tr>
-    <tr><td>netOut</td><td>size on mongo net out</td></tr>
+    <tr><td>netIO</td><td>size on mongo net in/ net out</td></tr>
     <tr><td>time</td><td>the time sampled</td></tr>
 </table>
 

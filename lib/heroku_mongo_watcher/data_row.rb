@@ -35,6 +35,10 @@ class HerokuMongoWatcher::DataRow
     total_requests > 0 ? total_queue / total_requests : 'N/A'
   end
 
+  def error_rate
+    total_requests > 0 ? (((total_web_errors + total_router_errors)*(1.0)) / total_requests).round(2) : 'N/A'
+  end
+
   def process_heroku_router_line(line)
     items = line.split
 
@@ -117,8 +121,8 @@ class HerokuMongoWatcher::DataRow
 
   def self.print_header
     puts
-    puts "|<---- heroku stats ------------------------------------------------------------>|<----mongo stats ------------------------------------------------------->|"
-    puts "dyno reqs       art    max    r_err w_err   wait  queue slowest                  | insert  query  update  faults locked qr|qw  netIn  netOut    time       |"
+    puts "|<---- heroku stats ------------------------------------------------------------------->|<----mongo stats ------------------------------------------------>|"
+    puts "| dyno reqs    art   max    r_err  w_err  %err   wait  queue   slowest                  | insert  query  update  faults locked qr|qw   netI/O      time    |"
   end
 
   def print_row
@@ -127,9 +131,10 @@ class HerokuMongoWatcher::DataRow
     color_print @dynos, length: 4
     color_print @total_requests, warning: 30_000, critical: 50_000
     color_print average_response_time, warning: 1000, critical: 10_000, bold: true
-    color_print @max_service, warning: 20_000, critical: 27_000
-    color_print @total_router_errors, warning: 1, critical: 10
-    color_print @total_web_errors, warning: 1, critical: 10
+    color_print @max_service, warning: 20_000
+    color_print @total_router_errors, warning: 1
+    color_print @total_web_errors, warning: 1
+    color_print error_rate, warning: 0.1, critical: 1, percent: true
     color_print average_wait, warning: 10, critical: 100
     color_print average_queue, warning: 10, critical: 100
     color_print @slowest_request, length: 28, slice: 25
@@ -140,9 +145,8 @@ class HerokuMongoWatcher::DataRow
     color_print @faults
     color_print @locked, bold: true, warning: 40, critical: 70
     color_print @qrw
-    color_print @net_in
-    color_print @net_out
-    color_print @mongo_time, length: 10
+    color_print "#{@net_in}/#{@net_out}", length: 10
+    color_print @mongo_time, length: 9
     printf "\n"
   end
 
@@ -154,12 +158,23 @@ class HerokuMongoWatcher::DataRow
     end
   end
 
+  def error_content_for_email
+     content = []
+     if @errors && @errors.keys && @errors.keys.length > 0
+       content << "Errors"
+       @errors.each do |error,count|
+         content <<  "\t\t[#{count}] #{error}"
+       end
+     end
+     content
+  end
+
   private
 
   def is_number?(string)
     _is_number = true
     begin
-      num = Integer(string)
+      num = Float(string)
     rescue
       _is_number = false
     end
@@ -169,16 +184,17 @@ class HerokuMongoWatcher::DataRow
   def color_print(field, options ={})
     options[:length] = 7 unless options[:length]
     print Term::ANSIColor.bold if options[:bold] == true
-    if options[:critical] && is_number?(field) && Integer(field) > options[:critical]
+    if options[:critical] && is_number?(field) && Float(field) > options[:critical]
       print "\a" #beep
       print Term::ANSIColor.red
       print Term::ANSIColor.bold
-    elsif options[:warning] && is_number?(field) && Integer(field) > options[:warning]
+    elsif options[:warning] && is_number?(field) && Float(field) > options[:warning]
       print Term::ANSIColor.yellow
     end
 
     str = field.to_s
     str = str.slice(0, options[:slice]) if options[:slice] && str && str.length > 0
+    str = str + "\%" if options[:percent]
 
     printf "%#{options[:length]}s", str
     print Term::ANSIColor.clear

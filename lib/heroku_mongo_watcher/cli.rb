@@ -74,8 +74,7 @@ class HerokuMongoWatcher::CLI
 
           @current_row.print_row
 
-          check_and_notify_locks
-          check_and_notify_response_time
+          check_and_notify
 
           @last_row = @current_row
           @current_row = HerokuMongoWatcher::DataRow.new
@@ -88,6 +87,11 @@ class HerokuMongoWatcher::CLI
     heroku_watcher.join
     heroku_ps.join
 
+  end
+
+  def self.check_and_notify
+    check_and_notify_locks
+    check_and_notify_response_time
   end
 
   protected
@@ -110,10 +114,10 @@ class HerokuMongoWatcher::CLI
 
   def self.check_and_notify_response_time
     return unless @current_row.total_requests > 200
-    if @current_row.average_response_time > 10_000 || @current_row.total_router_errors > 100
+    if @current_row.average_response_time > 10_000 || @current_row.error_rate > 1
       notify "[SEVERE WARNING] Application not healthy | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_critical_notified
       # @art_critical_notified = true
-    elsif @current_row.average_response_time > 500 || @current_row.total_router_errors > 10 || @current_row.total_requests > 30_000
+    elsif @current_row.average_response_time > 500 || @current_row.error_rate > 0.3 || @current_row.total_requests > 30_000
       notify "[WARNING] Application heating up | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_warning_notified
       # @art_warning_notified = true
     elsif @current_row.average_response_time < 300
@@ -142,9 +146,19 @@ class HerokuMongoWatcher::CLI
         "Average Reponse Time: #{@last_row.average_response_time}",
         "Application Errors: #{@last_row.total_web_errors}",
         "Router Errors (timeouts): #{@last_row.total_router_errors}",
-        "Dynos: #{@last_row.dynos}"
-    ].join("\r\n")
+        "Error Rate: #{@last_row.error_rate}%",
+        "Dynos: #{@last_row.dynos}",
+        "",
+        "Locks: #{@last_row.lock}",
+        "Queries: #{@last_row.queries}",
+        "Inserts: #{@last_row.inserts}",
+        "Updates: #{@last_row.updates}",
+        "Faults: #{@last_row.faults}",
+        "NetI/O: #{@last_row.net_in}/#{@last_row.net_out}",
+    ]
+    content = content + @last_row.error_content_for_email
 
+    content = content.join("\r\n")
     Net::SMTP.enable_tls(OpenSSL::SSL::VERIFY_NONE)
     Net::SMTP.start('smtp.gmail.com', 587, 'gmail.com', config[:gmail_username], config[:gmail_password], :login) do |smtp|
       smtp.send_message(content, config[:gmail_username], to)
