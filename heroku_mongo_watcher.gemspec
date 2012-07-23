@@ -23,4 +23,5 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "term-ansicolor"
   s.add_runtime_dependency "tlsmail"
   s.add_runtime_dependency "heroku"
+  s.add_runtime_dependency "trollop"
 end

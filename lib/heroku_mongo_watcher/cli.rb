@@ -1,5 +1,6 @@
 require 'heroku_mongo_watcher/configuration'
 require 'heroku_mongo_watcher/data_row'
+require 'trollop'
 
 #http://stackoverflow.com/a/9117903/192791
 require 'net/smtp'
@@ -20,7 +21,7 @@ class HerokuMongoWatcher::CLI
     HerokuMongoWatcher::Configuration.instance.config
   end
 
-  def self.watch(*args)
+  def self.watch
 
     notify("Mongo Watcher enabled!")
 

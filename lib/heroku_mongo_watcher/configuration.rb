@@ -1,4 +1,5 @@
 require 'singleton'
+require 'trollop'
 
 class HerokuMongoWatcher::Configuration
   include Singleton
@@ -22,6 +23,13 @@ class HerokuMongoWatcher::Configuration
   def initialize
     f = File.join(File.expand_path('~'),'.watcher')
     configure_with(f)
+
+    opts = Trollop::options do
+      opt :print_errors, "show aggregate error summaries", default: true
+    end
+
+    @@config.merge!(opts)
+
   end
 
   def config
