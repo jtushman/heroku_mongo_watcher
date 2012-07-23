@@ -27,24 +27,25 @@ The output looks like the following ...
       20  23935    190   7144      0     43      0      0            /crossdomain.xml|    307      0    618      1   21.6    0|0   260k   221k  15:05:19
 
 ### Legend
-| Term  | Definition |
-| dynos | Number of running web instances |
-| reqs  | number of requests per sample   |
-| art   | average request time |
-| max   | max request time |
-| r_err | number of router errors, i.e. timeouts |
-| w_err | number of web errros (see below) |
-| wait  | average router wait |
-| queue | average router queue |
-| slowest | path of the url that corresponds to the max request time |
-| insert | number of mongo inserts |
-| query | number of mongo queries |
-| update | number of mongo updates |
-| faults | number of mongo page faults |
-| qr qw | number of mongo's queued read and writes |
-| netIn | size on mongo net In |
-| netIn | size on mongo net out |
-| time | the time sampled |
+<dl>
+    <dt>dynos</dt><dd>Number of running web instances</dd>
+    <dt>reqs</dt><dd>number of requests per sample</dd>
+    <dt>art</dt><dd>average request time</dd>
+    <dt>max</dt><dd>max request time</dd>
+    <dt>r_err</dt><dd>number of router errors, i.e. timeouts</dd>
+    <dt>w_err</dt><dd>number of web errros (see below)</dd>
+    <dt>wait</dt><dd>average router wait</dd>
+    <dt>queue</dt><dd>average router queue</dd>
+    <dt>slowest</dt><dd>path of the url that corresponds to the max request time</dd>
+    <dt>insert</dt><dd>number of mongo inserts</dd>
+    <dt>query</dt><dd>number of mongo queries</dd>
+    <dt>update</dt><dd>number of mongo updates</dd>
+    <dt>faults</dt><dd>number of mongo page faults</dd>
+    <dt>qr|qw</dt><dd>number of mongo's queued read and writes</dd>
+    <dt>netIn</dt><dd>size on mongo net In</dd>
+    <dt>netIn</dt><dd>size on mongo net out</dd>
+    <dt>time</dt><dd>the time sampled</dd>
+</dl>
 
 ### Web Errors (w_err)
 At least for me, one of the key features is aggregating signals from my web log (I look out for certain race conditions,
