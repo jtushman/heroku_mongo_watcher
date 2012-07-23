@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = HerokuMongoWatcher::VERSION
   s.authors     = ["Jonathan Tushman"]
   s.email       = ["jtushman@gmail.com"]
-  s.homepage    = "http://www.tushman.com"
+  s.homepage    = "https://github.com/jtushman/heroku_mongo_watcher"
   s.summary     = %q{Watches Mongostat and heroku logs to give you a pulse of your application}
   s.description = %q{Also notifies you when certain thresholds are hit.  I have found this much more accurate than New Relic}
 

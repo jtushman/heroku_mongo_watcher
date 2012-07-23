@@ -73,11 +73,14 @@ class HerokuMongoWatcher::CLI
           @current_row.process_mongo_line(line)
 
           @current_row.print_row
+
           check_and_notify_locks
           check_and_notify_response_time
+
           @last_row = @current_row
           @current_row = HerokuMongoWatcher::DataRow.new
           @current_row.dynos = @last_row.dynos
+
         end
       end
     end

@@ -39,6 +39,8 @@ class HerokuMongoWatcher::DataRow
     items = line.split
 
     if line =~ /Error/
+      # Note: The lion share of these are timeouts
+      #Full list here: https://devcenter.heroku.com/articles/error-codes
       self.total_router_errors += 1
     else
       time = items[0]
@@ -123,7 +125,7 @@ class HerokuMongoWatcher::DataRow
     print_errors
 
     color_print @dynos, length: 4
-    color_print @total_requests
+    color_print @total_requests, warning: 30_000, critical: 50_000, bold: true
     color_print average_response_time, warning: 1000, critical: 10_000, bold: true
     color_print @max_service, warning: 10_000, critical: 20_000
     color_print @total_router_errors, warning: 1, critical: 10
@@ -136,7 +138,7 @@ class HerokuMongoWatcher::DataRow
     color_print @queries
     color_print @updates
     color_print @faults
-    color_print @locked, bold: true, warning: 70, critical: 90
+    color_print @locked, bold: true, warning: 40, critical: 70
     color_print @qrw
     color_print @net_in
     color_print @net_out
