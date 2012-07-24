@@ -60,7 +60,7 @@ class HerokuMongoWatcher::DataRow
       status = items[8].split('=').last if items[8]
       bytes = items[9].split('=').last if items[9]
 
-      path = URI('http://' + url).path
+      path = extract_path(url)
 
       if is_number?(service) && is_number?(wait) && is_number?(queue)
         self.total_requests +=1
@@ -81,6 +81,12 @@ class HerokuMongoWatcher::DataRow
 
 
     end
+  end
+
+  def extract_path(url)
+    URI('http://' + url).path
+  rescue
+    return url
   end
 
   def process_heroku_web_line(line)
@@ -164,7 +170,7 @@ class HerokuMongoWatcher::DataRow
 
   def print_hash(hash)
     if hash && hash.keys && hash.keys.length > 0
-      hash.sort_by{|key,count| -count}.each do |row|
+      hash.sort_by{|key,count| -count}.first(10).each do |row|
         printf "\t%10s %s\n", "[#{row.last}]", row.first
       end
     end
@@ -187,7 +193,7 @@ class HerokuMongoWatcher::DataRow
      if @requests && @requests.keys && @requests.keys.length > 0
        content << ""
        content << "Requests"
-       @requests.sort_by{|req,count| -count}.each do |row|
+       @requests.sort_by{|req,count| -count}.first(10).each do |row|
          content << "\t\t[#{row.last}] #{row.first}"
        end
      end

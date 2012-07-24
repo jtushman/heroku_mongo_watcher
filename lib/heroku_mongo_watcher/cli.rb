@@ -23,7 +23,7 @@ class HerokuMongoWatcher::CLI
   end
 
   def self.watch
-
+    Thread.abort_on_exception = true
     notify("Mongo Watcher enabled!")
 
     # lock warnings flags
