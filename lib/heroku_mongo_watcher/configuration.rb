@@ -15,7 +15,8 @@ class HerokuMongoWatcher::Configuration
       mongo_password: '',
       heroku_appname: '',
       heroku_account: '',
-      print_errors: true
+      print_errors: false,
+      print_requests: false
   }
 
   @@valid_config_keys = @@config.keys
@@ -25,7 +26,8 @@ class HerokuMongoWatcher::Configuration
     configure_with(f)
 
     opts = Trollop::options do
-      opt :print_errors, "show aggregate error summaries", default: true
+      opt :print_errors, "show aggregate error summaries", default: false
+      opt :print_requests, "show aggregate requests summaries", default: false
     end
 
     @@config.merge!(opts)

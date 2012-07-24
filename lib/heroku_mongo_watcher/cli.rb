@@ -72,7 +72,8 @@ class HerokuMongoWatcher::CLI
 
     HerokuMongoWatcher::DataRow.print_header
 
-    IO.popen("mongostat --rowcount 0 #{config[:interval]} --host #{config[:mongo_host]} --username #{config[:mongo_username]} --password #{config[:mongo_password]} --noheaders") do |f|
+    #IO.popen("mongostat --rowcount 0 #{config[:interval]} --host #{config[:mongo_host]} --username #{config[:mongo_username]} --password #{config[:mongo_password]} --noheaders") do |f|
+    IO.popen("mongostat --rowcount 0 10 --host #{config[:mongo_host]} --username #{config[:mongo_username]} --password #{config[:mongo_password]} --noheaders") do |f|
       while line = f.gets
         next unless line =~ /^/ && !(line =~ /^connected/)
         @mutex.synchronize do
@@ -163,7 +164,7 @@ class HerokuMongoWatcher::CLI
         "Faults: #{@last_row.faults}",
         "NetI/O: #{@last_row.net_in}/#{@last_row.net_out}",
     ]
-    content = content + @last_row.error_content_for_email
+    content = content + @last_row.error_content_for_email + @last_row.request_content_for_email
 
     content = content.join("\r\n")
     Net::SMTP.enable_tls(OpenSSL::SSL::VERIFY_NONE)

@@ -5,7 +5,7 @@ class HerokuMongoWatcher::DataRow
   # Heroku Attributes
   @@attributes = [:total_requests, :total_service, :total_wait,
                   :total_queue, :total_router_errors, :total_web_errors,
-                  :max_service, :slowest_request, :errors, :dynos]
+                  :max_service, :slowest_request, :errors, :requests,:dynos]
 
   # Mongo Attributes
   @@attributes.concat [:inserts, :queries, :ops, :updates, :deletes,
@@ -17,6 +17,7 @@ class HerokuMongoWatcher::DataRow
     @@attributes.each { |attr| send "#{attr}=", 0 }
     self.slowest_request = nil
     self.errors = {}
+    self.requests = {}
   end
 
   def config
@@ -58,6 +59,8 @@ class HerokuMongoWatcher::DataRow
       status = items[8].split('=').last if items[8]
       bytes = items[9].split('=').last if items[9]
 
+      path = URI('http://' + url).path
+
       if is_number?(service) && is_number?(wait) && is_number?(queue)
         self.total_requests +=1
         self.total_service += Integer(service) if service
@@ -65,9 +68,16 @@ class HerokuMongoWatcher::DataRow
         self.total_queue += Integer(queue) if queue
         if Integer(service) > self.max_service
           self.max_service = Integer(service)
-          self.slowest_request = URI('http://' + url).path
+          self.slowest_request = path
         end
       end
+
+      if self.requests.has_key? path
+        self.requests[path] = self.requests[path] + 1
+      else
+        self.requests[path] = 1
+      end
+
 
     end
   end
@@ -126,7 +136,8 @@ class HerokuMongoWatcher::DataRow
   end
 
   def print_row
-    print_errors
+    print_hash(@errors) if config[:print_errors]
+    print_hash(@requests) if config[:print_requests]
 
     color_print @dynos, length: 4
     color_print @total_requests, warning: 30_000, critical: 50_000
@@ -150,10 +161,10 @@ class HerokuMongoWatcher::DataRow
     printf "\n"
   end
 
-  def print_errors
-    if config[:print_errors] && @errors && @errors.keys && @errors.keys.length > 0
-      @errors.each do |error,count|
-        puts "\t\t[#{count}] #{error}"
+  def print_hash(hash)
+    if hash && hash.keys && hash.keys.length > 0
+      hash.sort_by{|key,count| -count}.each do |row|
+        printf "\t%10s %s\n", "[#{row.last}]", row.first
       end
     end
   end
@@ -161,9 +172,22 @@ class HerokuMongoWatcher::DataRow
   def error_content_for_email
      content = []
      if @errors && @errors.keys && @errors.keys.length > 0
+       content << ""
        content << "Errors"
        @errors.each do |error,count|
          content <<  "\t\t[#{count}] #{error}"
+       end
+     end
+     content
+  end
+
+  def request_content_for_email
+     content = []
+     if @requests && @requests.keys && @requests.keys.length > 0
+       content << ""
+       content << "Requests"
+       @requests.sort_by{|req,count| -count}.each do |row|
+         content << "\t\t[#{row.last}] #{row.first}"
        end
      end
      content
@@ -183,9 +207,9 @@ class HerokuMongoWatcher::DataRow
 
   def color_print(field, options ={})
     options[:length] = 7 unless options[:length]
-    print Term::ANSIColor.bold if options[:bold] == true
+    print Term::ANSIColor.bold if options[:bold]
     if options[:critical] && is_number?(field) && Float(field) > options[:critical]
-      print "\a" #beep
+      beep
       print Term::ANSIColor.red
       print Term::ANSIColor.bold
     elsif options[:warning] && is_number?(field) && Float(field) > options[:warning]
@@ -198,6 +222,10 @@ class HerokuMongoWatcher::DataRow
 
     printf "%#{options[:length]}s", str
     print Term::ANSIColor.clear
+  end
+
+  def beep
+    print "\a"
   end
 
 

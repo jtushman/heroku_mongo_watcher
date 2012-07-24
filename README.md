@@ -34,6 +34,7 @@ The output looks like the following ...
     <tr><td>max</td><td>max request time</td></tr>
     <tr><td>r_err</td><td>number of router errors, i.e. timeouts</td></tr>
     <tr><td>w_err</td><td>number of web errros (see below)</td></tr>
+    <tr><td>%err</td><td>total errors divided by total requests</td></tr>
     <tr><td>wait</td><td>average router wait</td></tr>
     <tr><td>queue</td><td>average router queue</td></tr>
     <tr><td>slowest</td><td>path of the url that corresponds to the max request time</td></tr>
@@ -51,7 +52,7 @@ At least for me, one of the key features is aggregating signals from my web log 
 and other errors).  You can can configure the `error_messages` array in your .watcher file to define which String we
 should report on.
 
-In concert with that is the `display_errors` configuration.  If set to true it will aggregate and display the errors
+In concert with that is the `print_errors` configuration.  If set to true it will aggregate and display the errors
 found (see output above), set to false it will just put the total in the summary row
 
 
@@ -66,3 +67,10 @@ found (see output above), set to false it will just put the total in the summary
 2. create a .watcher file (see the examples) in your user directory ~/.watcher
 3. then run `bundle exec watcher`
 4. Ctrl-C out to quit
+
+## Options
+
+*  `--print-errors` to print a summary of errors during each sample
+*  `--print-requests` to print a summary of requests during each sample
+
+note: you can set these defaults in your .watcher file

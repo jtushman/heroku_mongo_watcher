@@ -26,4 +26,7 @@ heroku_appname: 'my-heroku-app-name'
 heroku_account: 'my-heroku-account'
 
 # If you want to display the list of errors in the logs
-display_errors: true
+print_errors: true
+
+# If you want to display the list of requests in the logs
+print_requests: false
