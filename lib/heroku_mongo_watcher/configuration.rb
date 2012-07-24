@@ -28,6 +28,7 @@ class HerokuMongoWatcher::Configuration
     opts = Trollop::options do
       opt :print_errors, "show aggregate error summaries", default: false
       opt :print_requests, "show aggregate requests summaries", default: false
+      opt :interval, "frequency in seconds to poll mongostat and print out results", default: 60
     end
 
     @@config.merge!(opts)

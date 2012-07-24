@@ -72,8 +72,7 @@ class HerokuMongoWatcher::CLI
 
     HerokuMongoWatcher::DataRow.print_header
 
-    #IO.popen("mongostat --rowcount 0 #{config[:interval]} --host #{config[:mongo_host]} --username #{config[:mongo_username]} --password #{config[:mongo_password]} --noheaders") do |f|
-    IO.popen("mongostat --rowcount 0 10 --host #{config[:mongo_host]} --username #{config[:mongo_username]} --password #{config[:mongo_password]} --noheaders") do |f|
+    IO.popen("mongostat --rowcount 0 #{config[:interval]} --host #{config[:mongo_host]} --username #{config[:mongo_username]} --password #{config[:mongo_password]} --noheaders") do |f|
       while line = f.gets
         next unless line =~ /^/ && !(line =~ /^connected/)
         @mutex.synchronize do
