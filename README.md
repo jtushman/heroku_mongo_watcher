@@ -59,7 +59,8 @@ found (see output above), set to false it will just put the total in the summary
 ## Prereqs
 
 1. need to have a heroku account, and have the heroku gem running on your machine
-2. need to be able to run mongostat (e.q. has at least read-only admin access to your mongos)
+2. need to be able to run mongostat (e.q. has at least read-only admin access to your mongos), and have mongo installed
+locally
 
 ## To install
 

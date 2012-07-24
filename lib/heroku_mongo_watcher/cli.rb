@@ -43,7 +43,7 @@ class HerokuMongoWatcher::CLI
     heroku_watcher = Thread.new('heroku_logs') do
 
       cmd_string = "heroku logs --tail --app #{config[:heroku_appname]}"
-      cmd_string = cmd_string + " --account #{config[:heroku_account]}" if config[:heroku_account]
+      cmd_string = cmd_string + " --account #{config[:heroku_account]}" if config[:heroku_account] && config[:heroku_account].length > 0
       IO.popen(cmd_string) do |f|
         while line = f.gets
           @mutex.synchronize do
@@ -59,7 +59,7 @@ class HerokuMongoWatcher::CLI
       while true do
         dynos = 0
         cmd_string = "heroku ps --app #{config[:heroku_appname]}"
-        cmd_string = cmd_string + " --account #{config[:heroku_account]}" if config[:heroku_account]
+        cmd_string = cmd_string + " --account #{config[:heroku_account]}" if config[:heroku_account] && config[:heroku_account].length > 0
         IO.popen(cmd_string) do |p|
           while line = p.gets
             dynos += 1 if line =~ /^web/ && line.split(' ')[1] == 'up'
