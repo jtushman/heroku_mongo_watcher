@@ -1,5 +1,6 @@
 require 'singleton'
 require 'trollop'
+require 'heroku_mongo_watcher'
 
 class HerokuMongoWatcher::Configuration
   include Singleton

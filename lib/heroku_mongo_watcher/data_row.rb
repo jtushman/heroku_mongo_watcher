@@ -1,4 +1,5 @@
 require 'term/ansicolor'
+require 'heroku_mongo_watcher'
 require 'heroku_mongo_watcher/configuration'
 class HerokuMongoWatcher::DataRow
 
@@ -37,7 +38,7 @@ class HerokuMongoWatcher::DataRow
   end
 
   def error_rate
-    total_requests > 0 ? (((total_web_errors + total_router_errors)*(1.0)) / total_requests).round(2) : 'N/A'
+    total_requests > 0 ? ((((total_web_errors + total_router_errors)*(1.0)) / total_requests)* 100).round(2) : 'N/A'
   end
 
   def process_heroku_router_line(line)
@@ -145,7 +146,7 @@ class HerokuMongoWatcher::DataRow
     color_print @max_service, warning: 20_000
     color_print @total_router_errors, warning: 1
     color_print @total_web_errors, warning: 1
-    color_print error_rate, warning: 0.1, critical: 1, percent: true
+    color_print error_rate, warning: 1, critical: 3, percent: true
     color_print average_wait, warning: 10, critical: 100
     color_print average_queue, warning: 10, critical: 100
     color_print @slowest_request, length: 28, slice: 25
