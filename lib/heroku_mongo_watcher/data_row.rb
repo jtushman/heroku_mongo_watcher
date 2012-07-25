@@ -41,6 +41,38 @@ class HerokuMongoWatcher::DataRow
     total_requests > 0 ? ((((total_web_errors + total_router_errors)*(1.0)) / total_requests)* 100).round(2) : 'N/A'
   end
 
+  def self.print_header
+    puts
+    puts "|<---- heroku stats ------------------------------------------------------------------->|<----mongo stats ------------------------------------------------>|"
+    puts "| dyno reqs    art   max    r_err  w_err  %err   wait  queue   slowest                  | insert  query  update  faults locked qr|qw   netI/O      time    |"
+  end
+
+  def error_content_for_email
+     content = []
+     if @errors && @errors.keys && @errors.keys.length > 0
+       content << ""
+       content << "Errors"
+       @errors.each do |error,count|
+         content <<  "\t\t[#{count}] #{error}"
+       end
+     end
+     content
+  end
+
+  def request_content_for_email
+     content = []
+     if @requests && @requests.keys && @requests.keys.length > 0
+       content << ""
+       content << "Requests"
+       @requests.sort_by{|req,count| -count}.first(10).each do |row|
+         content << "\t\t[#{row.last}] #{row.first}"
+       end
+     end
+     content
+  end
+
+  private
+
   def process_heroku_router_line(line)
     items = line.split
 
@@ -136,12 +168,6 @@ class HerokuMongoWatcher::DataRow
 
   end
 
-  def self.print_header
-    puts
-    puts "|<---- heroku stats ------------------------------------------------------------------->|<----mongo stats ------------------------------------------------>|"
-    puts "| dyno reqs    art   max    r_err  w_err  %err   wait  queue   slowest                  | insert  query  update  faults locked qr|qw   netI/O      time    |"
-  end
-
   def print_row
     print_hash(@errors) if config[:print_errors]
     print_hash(@requests) if config[:print_requests]
@@ -176,32 +202,6 @@ class HerokuMongoWatcher::DataRow
     end
   end
 
-  def error_content_for_email
-     content = []
-     if @errors && @errors.keys && @errors.keys.length > 0
-       content << ""
-       content << "Errors"
-       @errors.each do |error,count|
-         content <<  "\t\t[#{count}] #{error}"
-       end
-     end
-     content
-  end
-
-  def request_content_for_email
-     content = []
-     if @requests && @requests.keys && @requests.keys.length > 0
-       content << ""
-       content << "Requests"
-       @requests.sort_by{|req,count| -count}.first(10).each do |row|
-         content << "\t\t[#{row.last}] #{row.first}"
-       end
-     end
-     content
-  end
-
-  private
-
   def is_number?(string)
     _is_number = true
     begin
@@ -234,6 +234,5 @@ class HerokuMongoWatcher::DataRow
   def beep
     print "\a"
   end
-
 
 end
