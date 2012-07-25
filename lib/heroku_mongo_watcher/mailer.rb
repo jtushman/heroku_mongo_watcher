@@ -44,7 +44,7 @@ class HerokuMongoWatcher::Mailer
         "Error Rate: #{data_row.error_rate}%",
         "Dynos: #{data_row.dynos}",
         "",
-        "Locks: #{data_row.lock}",
+        "Locks: #{data_row.locked}",
         "Queries: #{data_row.queries}",
         "Inserts: #{data_row.inserts}",
         "Updates: #{data_row.updates}",

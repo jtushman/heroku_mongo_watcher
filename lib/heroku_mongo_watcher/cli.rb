@@ -4,19 +4,6 @@ require 'heroku_mongo_watcher/mailer'
 require 'heroku_mongo_watcher/data_row'
 require 'trollop'
 
-#http://stackoverflow.com/a/9117903/192791
-require 'net/smtp'
-Net.instance_eval {remove_const :SMTPSession} if defined?(Net::SMTPSession)
-
-require 'net/pop'
-Net::POP.instance_eval {remove_const :Revision} if defined?(Net::POP::Revision)
-Net.instance_eval {remove_const :POP} if defined?(Net::POP)
-Net.instance_eval {remove_const :POPSession} if defined?(Net::POPSession)
-Net.instance_eval {remove_const :POP3Session} if defined?(Net::POP3Session)
-Net.instance_eval {remove_const :APOPSession} if defined?(Net::APOPSession)
-
-require 'tlsmail'
-
 class HerokuMongoWatcher::CLI
 
   def self.config
@@ -111,7 +98,7 @@ class HerokuMongoWatcher::CLI
   protected
 
   def self.check_and_notify_locks
-    l = Float(@current_row.lock)
+    l = Float(@current_row.locked)
     if l > 90
       mailer.notify(@current_row, '[CRITICAL] Locks above 90%') unless @lock_critical_notified
     elsif l > 70
