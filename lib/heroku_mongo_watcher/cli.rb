@@ -1,5 +1,6 @@
 require 'heroku_mongo_watcher'
 require 'heroku_mongo_watcher/configuration'
+require 'heroku_mongo_watcher/mailer'
 require 'heroku_mongo_watcher/data_row'
 require 'trollop'
 
@@ -22,9 +23,12 @@ class HerokuMongoWatcher::CLI
     HerokuMongoWatcher::Configuration.instance.config
   end
 
+  def self.mailer
+    HerokuMongoWatcher::Mailer.instance
+  end
+
   def self.watch
     Thread.abort_on_exception = true
-    notify("Mongo Watcher enabled!")
 
     # lock warnings flags
     @lock_critical_notified = false
@@ -38,6 +42,9 @@ class HerokuMongoWatcher::CLI
     @last_row = HerokuMongoWatcher::DataRow.new
 
     @mutex = Mutex.new
+
+    # Let people know that its on, and confirm emails are being received
+    mailer.notify(@current_row,"Mongo Watcher enabled!")
 
     # Call Tails heroku logs updates counts
     heroku_watcher = Thread.new('heroku_logs') do
@@ -106,12 +113,12 @@ class HerokuMongoWatcher::CLI
   def self.check_and_notify_locks
     l = Float(@current_row.lock)
     if l > 90
-      notify '[CRITICAL] Locks above 90%' unless @lock_critical_notified
+      mailer.notify(@current_row, '[CRITICAL] Locks above 90%') unless @lock_critical_notified
     elsif l > 70
-      notify '[WARNING] Locks above 70%' unless @lock_warning_notified
+      mailer.notify(@current_row, '[WARNING] Locks above 70%') unless @lock_warning_notified
     elsif l < 50
       if @lock_warning_notified || @lock_critical_notified
-        notify '[Resolved] locks below 50%'
+        mailer.notify(@current_row, '[Resolved] locks below 50%')
         @lock_warning_notified = false
         @lock_critical_notified = false
       end
@@ -122,54 +129,17 @@ class HerokuMongoWatcher::CLI
   def self.check_and_notify_response_time
     return unless @current_row.total_requests > 200
     if @current_row.average_response_time > 10_000 || @current_row.error_rate > 4
-      notify "[SEVERE WARNING] Application not healthy | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_critical_notified
+      mailer.notify "[SEVERE WARNING] Application not healthy | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_critical_notified
       @art_critical_notified = true
     elsif @current_row.average_response_time > 500 || @current_row.error_rate > 1 || @current_row.total_requests > 30_000
-      notify "[WARNING] Application heating up | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_warning_notified
+      mailer.notify "[WARNING] Application heating up | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_warning_notified
       @art_warning_notified = true
     elsif @current_row.average_response_time < 300 && @current_row.total_requests < 25_000
       if @art_warning_notified || @art_critical_notified
-        notify "[RESOLVED] | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]"
+        mailer.notify "[RESOLVED] | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]"
         @art_warning_notified = false
         @art_critical_notified = false
       end
-    end
-  end
-
-  def self.notify(msg)
-    Thread.new('notify_admins') do
-      subscribers = config[:notify] || []
-      subscribers.each { |user_email| send_email(user_email, msg) }
-    end
-  end
-
-  def self.send_email(to, msg)
-    return unless config[:gmail_username] && config[:gmail_password]
-    content = [
-        "From: Mongo Watcher <#{config[:gmail_username]}>",
-        "To: #{to}",
-        "Subject: #{msg}",
-        "",
-        "RPM: #{@last_row.total_requests}",
-        "Average Reponse Time: #{@last_row.average_response_time}",
-        "Application Errors: #{@last_row.total_web_errors}",
-        "Router Errors (timeouts): #{@last_row.total_router_errors}",
-        "Error Rate: #{@last_row.error_rate}%",
-        "Dynos: #{@last_row.dynos}",
-        "",
-        "Locks: #{@last_row.lock}",
-        "Queries: #{@last_row.queries}",
-        "Inserts: #{@last_row.inserts}",
-        "Updates: #{@last_row.updates}",
-        "Faults: #{@last_row.faults}",
-        "NetI/O: #{@last_row.net_in}/#{@last_row.net_out}",
-    ]
-    content = content + @last_row.error_content_for_email + @last_row.request_content_for_email
-
-    content = content.join("\r\n")
-    Net::SMTP.enable_tls(OpenSSL::SSL::VERIFY_NONE)
-    Net::SMTP.start('smtp.gmail.com', 587, 'gmail.com', config[:gmail_username], config[:gmail_password], :login) do |smtp|
-      smtp.send_message(content, config[:gmail_username], to)
     end
   end
 

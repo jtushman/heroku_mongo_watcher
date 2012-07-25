@@ -75,3 +75,7 @@ locally
 *  `--print-requests` to print a summary of requests during each sample
 
 note: you can set these defaults in your .watcher file
+
+## Contact
+
+jtushman@pipewave.com

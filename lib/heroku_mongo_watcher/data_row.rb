@@ -71,8 +71,6 @@ class HerokuMongoWatcher::DataRow
      content
   end
 
-  private
-
   def process_heroku_router_line(line)
     items = line.split
 
@@ -113,12 +111,6 @@ class HerokuMongoWatcher::DataRow
 
 
     end
-  end
-
-  def extract_path(url)
-    URI('http://' + url).path
-  rescue
-    return url
   end
 
   def process_heroku_web_line(line)
@@ -194,12 +186,20 @@ class HerokuMongoWatcher::DataRow
     printf "\n"
   end
 
+  private
+  
   def print_hash(hash)
     if hash && hash.keys && hash.keys.length > 0
       hash.sort_by{|key,count| -count}.first(10).each do |row|
         printf "\t%10s %s\n", "[#{row.last}]", row.first
       end
     end
+  end
+
+  def extract_path(url)
+    URI('http://' + url).path
+  rescue
+    return url
   end
 
   def is_number?(string)
