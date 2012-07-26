@@ -17,14 +17,14 @@ It needed to accomplish the following:
 
 The output looks like the following ...
 
-    |<---- heroku stats ----------------------------------------------------------------------->|<----mongo stats ------------------------------------------------------->|
-    dyno reqs       art    max    r_err w_err   %err    wait  queue slowest                     | insert  query  update  faults locked qr|qw  netI/O    time              |
-      20     76     27    586      0      0     0.0%        0      0   /pxl/4fdbc97dc6b36c003000|      0      0      0      0      0    0|0   305b/257b  15:03:19
-      20   1592     62   1292      0      0     0.0%        0      0   /assets/companions/5009ab|     17      2     32      0    1.2    0|0   14k/26k    15:04:19
-    		[4] VAST Error
-    		[28] Timeout::Error
-    		[11] Cannot find impression when looking for asset
-      20  23935    190   7144      0     43      0.0%       0       0           /crossdomain.xml|    307      0    618      1   21.6    0|0   260k/221k  15:05:19
+    |<---- heroku stats ------------------------------------------------------------------->|<----mongo stats ------------------------------------------------>|
+    | dyno reqs    art   max    r_err  w_err  %err   wait  queue   slowest                  |insrt query updt  flt  lck  lck:mrq qr|qw   netI/O      time      |
+       6   3096     57    870      0      2  0.06%      0      0   /assets/companions/50104c|   41     0   79    0 2.2%   0.71    0|0   36k/30k      15:59:29
+       6   2705     80   3314      0      0   0.0%      0      0   /assets/companions/50104b|   34     0   67    0   2%   0.74    0|0   30k/25k      16:00:29
+       6   2469    122   5708      0      0   0.0%      0      0   /ads/gw/50074348451823003|   30     0   57    0 1.7%   0.69    0|0   26k/22k      16:01:29
+       6   2465     89   1347      0      0   0.0%      0      0   /assets/videos/501050b991|   30     0   59    0 1.8%   0.73    0|0   27k/22k      16:02:29
+       6   2301     83   1912      0      4  0.17%      0      0   /assets/companions/501050|   28     0   57    0 1.7%   0.74    0|0   25k/21k      16:03:29
+       6   1951     64    830      0      0   0.0%      0      0   /ads/gw/50074348451823003|   24     0   45    0 1.4%   0.72    0|0   21k/18k      16:04:29
 
 ### Legend
 <table>
@@ -42,6 +42,8 @@ The output looks like the following ...
     <tr><td>query</td><td>number of mongo queries</td></tr>
     <tr><td>update</td><td>number of mongo updates</td></tr>
     <tr><td>faults</td><td>number of mongo page faults</td></tr>
+    <tr><td>lck</td><td>mongo lock percentage</td></tr>
+    <tr><td>lck:mrq</td><td>ratio of lock% to 1000 requests</td></tr>
     <tr><td>qr|qw</td><td>number of mongo's queued read and writes</td></tr>
     <tr><td>netIO</td><td>size on mongo net in/ net out</td></tr>
     <tr><td>time</td><td>the time sampled</td></tr>

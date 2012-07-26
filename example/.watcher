@@ -21,9 +21,8 @@ mongo_password: 'skret'
 # note you already need to have the heroku gem installed
 # with creditails already set up for this directory
 heroku_appname: 'my-heroku-app-name'
-
-#if you have multiple accounts
-heroku_account: 'my-heroku-account'
+heroku_username: 'ninja'
+heroku_password: 'skret'
 
 # If you want to display the list of errors in the logs
 print_errors: true

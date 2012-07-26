@@ -14,10 +14,9 @@ class HerokuMongoWatcher::Configuration
       mongo_host: '',
       mongo_username: '',
       mongo_password: '',
-      heroku_appname: '',
-      heroku_account: '',
       heroku_username: '',
       heroku_password: '',
+      heroku_appname: '',
       print_errors: false,
       print_requests: false
   }

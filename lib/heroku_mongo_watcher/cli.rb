@@ -1,9 +1,9 @@
+require 'heroku'
 require 'heroku_mongo_watcher'
 require 'heroku_mongo_watcher/configuration'
 require 'heroku_mongo_watcher/autoscaler'
 require 'heroku_mongo_watcher/mailer'
 require 'heroku_mongo_watcher/data_row'
-require 'trollop'
 
 class HerokuMongoWatcher::CLI
 
@@ -17,6 +17,10 @@ class HerokuMongoWatcher::CLI
 
   def self.autoscaler
     HerokuMongoWatcher::Autoscaler.instance
+  end
+
+  def self.heroku
+    @heroku || Heroku::Client.new(config[:heroku_username],config[:heroku_password])
   end
 
   def self.watch
@@ -39,36 +43,10 @@ class HerokuMongoWatcher::CLI
     mailer.notify(@current_row,"Mongo Watcher enabled!")
 
     # Call Tails heroku logs updates counts
-    heroku_watcher = Thread.new('heroku_logs') do
-
-      cmd_string = "heroku logs --tail --app #{config[:heroku_appname]}"
-      cmd_string = cmd_string + " --account #{config[:heroku_account]}" if config[:heroku_account] && config[:heroku_account].length > 0
-      IO.popen(cmd_string) do |f|
-        while line = f.gets
-          @mutex.synchronize do
-            @current_row.process_heroku_router_line(line) if line.include? 'heroku[router]'
-            @current_row.process_heroku_web_line(line) if line.include? 'app[web'
-          end
-        end
-      end
-    end
+    heroku_watcher = Thread.new('heroku_logs') { tail_and_process_heroku }
 
     # Call Heroku PS to check the number of up dynos
-    heroku_ps = Thread.new('heroku_ps') do
-      while true do
-        dynos = 0
-        cmd_string = "heroku ps --app #{config[:heroku_appname]}"
-        cmd_string = cmd_string + " --account #{config[:heroku_account]}" if config[:heroku_account] && config[:heroku_account].length > 0
-        IO.popen(cmd_string) do |p|
-          while line = p.gets
-            dynos += 1 if line =~ /^web/ && line.split(' ')[1] == 'up'
-          end
-        end
-        @mutex.synchronize { @current_row.dynos = dynos }
-        sleep(30)
-      end
-    end
-
+    heroku_ps = Thread.new('heroku_ps') { periodicly_capture_heroku_ps }
 
     HerokuMongoWatcher::DataRow.print_header
 
@@ -95,6 +73,27 @@ class HerokuMongoWatcher::CLI
     heroku_watcher.join
     heroku_ps.join
 
+  rescue Interrupt
+    puts "\nexiting ..."
+  end
+
+  def self.periodicly_capture_heroku_ps
+    while true do
+      results = heroku.ps(config[:heroku_appname])
+      dynos = results.select { |ps| ps['process'] =~ /^web./ && ps['state'] == 'up' }.count
+
+      @mutex.synchronize { @current_row.dynos = dynos }
+      sleep(30)
+    end
+  end
+
+  def self.tail_and_process_heroku
+    heroku.read_logs(config[:heroku_appname], ['tail=1']) do |line|
+      @mutex.synchronize do
+        @current_row.process_heroku_router_line(line) if line.include? 'heroku[router]'
+        @current_row.process_heroku_web_line(line) if line.include? 'app[web'
+      end
+    end
   end
 
   def self.check_and_notify
