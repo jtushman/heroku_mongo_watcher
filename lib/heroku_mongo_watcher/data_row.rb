@@ -42,13 +42,13 @@ class HerokuMongoWatcher::DataRow
   end
 
   def lock_request_ratio
-    total_requests > 0 ? (((Float(locked) * 1.0)/ total_requests)).round(2) : 'N/A'
+    total_requests > 0 ? ((((Float(locked) * 1.0)/ total_requests)) * 1_000).round(2) : 'N/A'
   end
 
   def self.print_header
     puts
     puts "|<---- heroku stats ------------------------------------------------------------------->|<----mongo stats ------------------------------------------------>|"
-    puts "| dyno reqs    art   max    r_err  w_err  %err   wait  queue   slowest                  |insrt query updt  flt  lck  lck:rq qr|qw   netI/O      time    |"
+    puts "| dyno reqs    art   max    r_err  w_err  %err   wait  queue   slowest                  |insrt query updt  flt  lck   lck:mrq qr|qw   netI/O      time      |"
   end
 
   def error_content_for_email
@@ -183,11 +183,11 @@ class HerokuMongoWatcher::DataRow
     color_print @queries, length: 6
     color_print @updates, length: 5
     color_print @faults, length: 5
-    color_print @locked, bold: true, warning: 40, critical: 70, length: 5, percent: true
+    color_print @locked, bold: true, warning: 40, critical: 70, length: 6, percent: true
     color_print lock_request_ratio
     color_print @qrw
     color_print "#{@net_in}/#{@net_out}", length: 10
-    color_print @mongo_time, length: 9
+    color_print @mongo_time, length: 13
     printf "\n"
   end
 
