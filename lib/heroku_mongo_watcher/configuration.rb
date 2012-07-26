@@ -16,6 +16,8 @@ class HerokuMongoWatcher::Configuration
       mongo_password: '',
       heroku_appname: '',
       heroku_account: '',
+      heroku_username: '',
+      heroku_password: '',
       print_errors: false,
       print_requests: false
   }
@@ -30,6 +32,7 @@ class HerokuMongoWatcher::Configuration
       opt :print_errors, "show aggregate error summaries", default: false
       opt :print_requests, "show aggregate requests summaries", default: false
       opt :interval, "frequency in seconds to poll mongostat and print out results", default: 60
+      opt :autoscale, "autoscale dynos -- WARNING ONLY DO THIS IF YOU KNOW WHAT YOUR ARE DOING", default: false
     end
 
     @@config.merge!(opts)

@@ -1,5 +1,6 @@
 require 'heroku_mongo_watcher'
 require 'heroku_mongo_watcher/configuration'
+require 'heroku_mongo_watcher/autoscaler'
 require 'heroku_mongo_watcher/mailer'
 require 'heroku_mongo_watcher/data_row'
 require 'trollop'
@@ -12,6 +13,10 @@ class HerokuMongoWatcher::CLI
 
   def self.mailer
     HerokuMongoWatcher::Mailer.instance
+  end
+
+  def self.autoscaler
+    HerokuMongoWatcher::Autoscaler.instance
   end
 
   def self.watch
@@ -77,6 +82,8 @@ class HerokuMongoWatcher::CLI
 
           check_and_notify
 
+          autoscaler.scale(@current_row) if config[:autoscale]
+
           @last_row = @current_row
           @current_row = HerokuMongoWatcher::DataRow.new
           @current_row.dynos = @last_row.dynos
@@ -116,14 +123,14 @@ class HerokuMongoWatcher::CLI
   def self.check_and_notify_response_time
     return unless @current_row.total_requests > 200
     if @current_row.average_response_time > 10_000 || @current_row.error_rate > 4
-      mailer.notify "[SEVERE WARNING] Application not healthy | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_critical_notified
+      mailer.notify @current_row, "[SEVERE WARNING] Application not healthy | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_critical_notified
       @art_critical_notified = true
     elsif @current_row.average_response_time > 500 || @current_row.error_rate > 1 || @current_row.total_requests > 30_000
-      mailer.notify "[WARNING] Application heating up | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_warning_notified
+      mailer.notify @current_row, "[WARNING] Application heating up | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_warning_notified
       @art_warning_notified = true
     elsif @current_row.average_response_time < 300 && @current_row.total_requests < 25_000
       if @art_warning_notified || @art_critical_notified
-        mailer.notify "[RESOLVED] | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]"
+        mailer.notify @current_row, "[RESOLVED] | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]"
         @art_warning_notified = false
         @art_critical_notified = false
       end
