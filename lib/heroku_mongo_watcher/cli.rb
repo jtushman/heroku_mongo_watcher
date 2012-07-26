@@ -38,27 +38,10 @@ class HerokuMongoWatcher::CLI
     mailer.notify(@current_row,"Mongo Watcher enabled!")
 
     # Call Tails heroku logs updates counts
-    heroku_watcher = Thread.new('heroku_logs') do
-
-      heroku.read_logs(config[:heroku_appname],['tail=1']) do |line|
-        @mutex.synchronize do
-          @current_row.process_heroku_router_line(line) if line.include? 'heroku[router]'
-          @current_row.process_heroku_web_line(line) if line.include? 'app[web'
-        end
-      end
-
-    end
+    heroku_watcher = Thread.new('heroku_logs') { tail_and_process_heroku }
 
     # Call Heroku PS to check the number of up dynos
-    heroku_ps = Thread.new('heroku_ps') do
-      while true do
-        results = heroku.ps(config[:heroku_appname])
-        dynos = results.select{|ps| ps['process'] =~ /^web./ && ps['state'] == 'up'}.count
-
-        @mutex.synchronize { @current_row.dynos = dynos }
-        sleep(30)
-      end
-    end
+    heroku_ps = Thread.new('heroku_ps') { periodicly_capture_heroku_ps }
 
     HerokuMongoWatcher::DataRow.print_header
 
@@ -87,6 +70,25 @@ class HerokuMongoWatcher::CLI
     puts "\nexiting ..."
   end
 
+  def self.periodicly_capture_heroku_ps
+    while true do
+      results = heroku.ps(config[:heroku_appname])
+      dynos = results.select { |ps| ps['process'] =~ /^web./ && ps['state'] == 'up' }.count
+
+      @mutex.synchronize { @current_row.dynos = dynos }
+      sleep(30)
+    end
+  end
+
+  def self.tail_and_process_heroku
+    heroku.read_logs(config[:heroku_appname], ['tail=1']) do |line|
+      @mutex.synchronize do
+        @current_row.process_heroku_router_line(line) if line.include? 'heroku[router]'
+        @current_row.process_heroku_web_line(line) if line.include? 'app[web'
+      end
+    end
+  end
+
   def self.check_and_notify
     check_and_notify_locks
     check_and_notify_response_time
@@ -113,14 +115,14 @@ class HerokuMongoWatcher::CLI
   def self.check_and_notify_response_time
     return unless @current_row.total_requests > 200
     if @current_row.average_response_time > 10_000 || @current_row.error_rate > 4
-      mailer.notify "[SEVERE WARNING] Application not healthy | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_critical_notified
+      mailer.notify @current_row, "[SEVERE WARNING] Application not healthy | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_critical_notified
       @art_critical_notified = true
     elsif @current_row.average_response_time > 500 || @current_row.error_rate > 1 || @current_row.total_requests > 30_000
-      mailer.notify "[WARNING] Application heating up | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_warning_notified
+      mailer.notify @current_row, "[WARNING] Application heating up | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]" unless @art_warning_notified
       @art_warning_notified = true
     elsif @current_row.average_response_time < 300 && @current_row.total_requests < 25_000
       if @art_warning_notified || @art_critical_notified
-        mailer.notify "[RESOLVED] | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]"
+        mailer.notify @current_row, "[RESOLVED] | [#{@current_row.total_requests} rpm,#{@current_row.average_response_time} art]"
         @art_warning_notified = false
         @art_critical_notified = false
       end
