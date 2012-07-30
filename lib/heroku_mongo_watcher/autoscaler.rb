@@ -57,12 +57,10 @@ class HerokuMongoWatcher::Autoscaler
     stepped_dynos = options[:max_dynos] if stepped_dynos > options[:max_dynos]
 
     # Don't allow downscaling until 5 minutes
-    if stepped_dynos < current_dynos && (Time.now - last_scaled) < (5 * 60)
-      puts ">> Current: [#{current_dynos}], Ideal: [#{stepped_dynos}] | will not downscale within 5 minutes"
-      return
-    end
-
-    if stepped_dynos != current_dynos
+    if stepped_dynos < current_dynos && (Time.now - last_scaled) < (60 * 60) # 1 hour
+      puts ">> Current: [#{current_dynos}], Ideal: [#{stepped_dynos}] | will not downscale within an hour"
+      nil
+    elsif stepped_dynos != current_dynos
       set_dynos(stepped_dynos)
       stepped_dynos
     else
