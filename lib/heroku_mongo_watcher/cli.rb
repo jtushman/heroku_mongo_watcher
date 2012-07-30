@@ -1,6 +1,7 @@
 require 'heroku'
 require 'heroku_mongo_watcher'
 require 'heroku_mongo_watcher/configuration'
+require 'heroku_mongo_watcher/autoscaler'
 require 'heroku_mongo_watcher/mailer'
 require 'heroku_mongo_watcher/data_row'
 
@@ -14,8 +15,12 @@ class HerokuMongoWatcher::CLI
     HerokuMongoWatcher::Mailer.instance
   end
 
+  def self.autoscaler
+    HerokuMongoWatcher::Autoscaler.instance
+  end
+
   def self.heroku
-    @heroku || Heroku::Client.new(config[:heroku_username],config[:heroku_password])
+    @heroku || Heroku::Client.new(config[:heroku_username], config[:heroku_password])
   end
 
   def self.watch
@@ -35,7 +40,7 @@ class HerokuMongoWatcher::CLI
     @mutex = Mutex.new
 
     # Let people know that its on, and confirm emails are being received
-    mailer.notify(@current_row,"Mongo Watcher enabled!")
+    mailer.notify(@current_row, "Mongo Watcher enabled!")
 
     # Call Tails heroku logs updates counts
     heroku_watcher = Thread.new('heroku_logs') { tail_and_process_heroku }
@@ -55,6 +60,8 @@ class HerokuMongoWatcher::CLI
 
           check_and_notify
 
+          autoscale if config[:autoscale]
+
           @last_row = @current_row
           @current_row = HerokuMongoWatcher::DataRow.new
           @current_row.dynos = @last_row.dynos
@@ -70,6 +77,14 @@ class HerokuMongoWatcher::CLI
     puts "\nexiting ..."
   end
 
+  def self.autoscale
+    new_dyno_level = autoscaler.scale(@current_row)
+    if new_dyno_level
+      puts "! Scaling -> #{new_dyno_level}"
+      mailer.notify(@current_row, "Scaling to #{new_dyno_level}")
+    end
+  end
+
   def self.periodicly_capture_heroku_ps
     while true do
       results = heroku.ps(config[:heroku_appname])
@@ -81,11 +96,16 @@ class HerokuMongoWatcher::CLI
   end
 
   def self.tail_and_process_heroku
-    heroku.read_logs(config[:heroku_appname], ['tail=1']) do |line|
-      @mutex.synchronize do
-        @current_row.process_heroku_router_line(line) if line.include? 'heroku[router]'
-        @current_row.process_heroku_web_line(line) if line.include? 'app[web'
+    heroku.read_logs(config[:heroku_appname], ['tail=1']) do |chunk|
+      unless chunk.empty?
+        chunk.split("\n").each do |line|
+          @mutex.synchronize do
+            @current_row.process_heroku_router_line(line) if line.include? 'heroku[router]'
+            @current_row.process_heroku_web_line(line) if line.include? 'app[web'
+          end
+        end
       end
+
     end
   end
 

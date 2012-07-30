@@ -78,10 +78,16 @@ class HerokuMongoWatcher::DataRow
   def process_heroku_router_line(line)
     items = line.split
 
+    self.total_requests +=1
+
     if line =~ /Error/
       # Note: The lion share of these are timeouts
       #Full list here: https://devcenter.heroku.com/articles/error-codes
       self.total_router_errors += 1
+      time = items[0]
+      process = items[1]
+      clean_line = line.sub(time, '').sub(process, '').strip
+      add_error(clean_line)
     else
       time = items[0]
       process = items[1]
@@ -97,7 +103,6 @@ class HerokuMongoWatcher::DataRow
       path = extract_path(url)
 
       if is_number?(service) && is_number?(wait) && is_number?(queue)
-        self.total_requests +=1
         self.total_service += Integer(service) if service
         self.total_wait += Integer(wait) if wait
         self.total_queue += Integer(queue) if queue
@@ -128,13 +133,17 @@ class HerokuMongoWatcher::DataRow
       clean_line = line.sub(time, '').sub(process, '').strip
 
       self.total_web_errors += 1
-      if self.errors.has_key? clean_line
-        self.errors[clean_line] = self.errors[clean_line] + 1
-      else
-        self.errors[clean_line] = 1
-      end
+      add_error(clean_line)
     end
 
+  end
+
+  def add_error(error_line)
+    if self.errors.has_key? error_line
+      self.errors[error_line] = self.errors[error_line] + 1
+    else
+      self.errors[error_line] = 1
+    end
   end
 
   def process_mongo_line(line)
@@ -175,8 +184,8 @@ class HerokuMongoWatcher::DataRow
     color_print @total_router_errors, warning: 1
     color_print @total_web_errors, warning: 1
     color_print error_rate, warning: 1, critical: 3, percent: true
-    color_print average_wait, warning: 10, critical: 100
-    color_print average_queue, warning: 10, critical: 100
+    color_print @total_wait #, warning: 10, critical: 100
+    color_print @total_queue #, warning: 10, critical: 100
     color_print @slowest_request, length: 28, slice: 25
     print '|'
     color_print @inserts, length: 5
