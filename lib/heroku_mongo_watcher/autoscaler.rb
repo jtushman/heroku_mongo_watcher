@@ -16,6 +16,7 @@ class HerokuMongoWatcher::Autoscaler
     {
         min_dynos: 6,
         max_dynos: 50,
+        step: 5,
         requests_per_dyno: 1000,
         min_frequency: 60 # seconds
     }
@@ -25,19 +26,48 @@ class HerokuMongoWatcher::Autoscaler
     HerokuMongoWatcher::Configuration.instance.config
   end
 
+  # should play it safe and add config[:step] to the calculated result
+  # if rpm > 10,000 scale to 15
+  # if rpm > 15,000 scale to 20
+  # if rpm > 20,000 scale to 25
+  # if rpm then drops to 14,000 drop to 15
+  # if rpm then drops to 300 drop to 6 (minimum)
+  #
+  # also do not scale down for 5 minutes
+  # always allow to scale up
   def scale(data_row)
-
-    return if (Time.now - last_scaled) < options[:min_frequency]
 
     rpm = data_row.total_requests
     current_dynos = data_row.dynos
 
+    # 32,012 rpm => 32 dynos
     ideal_dynos = (rpm / options[:requests_per_dyno]).round
 
-    ideal_dynos = options[:min_dynos] if ideal_dynos < options[:min_dynos]
-    ideal_dynos = options[:max_dynos] if ideal_dynos > options[:max_dynos]
+    # Don't allow downscaling until 5 minutes
+    if ideal_dynos < current_dynos && (Time.now - last_scaled) < (5 * 60)
+      puts ">> will not downscale within 5 minutes"
+      return
+    end
 
-    set_dynos(ideal_dynos) if ideal_dynos != current_dynos
+    # return if the delta is less than 5 dynos | don't think I need to do this ...
+    #return if (ideal_dynos - current_dynos).abs < options[:step]
+
+    #this turns 32 into 30
+    stepped_dynos = (ideal_dynos/options[:step]).round * options[:step]
+
+    #this turns 30 into 35
+    stepped_dynos += options[:step]
+
+    #this makes sure that it stays within the min max bounds
+    stepped_dynos = options[:min_dynos] if stepped_dynos < options[:min_dynos]
+    stepped_dynos = options[:max_dynos] if stepped_dynos > options[:max_dynos]
+
+    if stepped_dynos != current_dynos
+      #set_dynos(stepped_dynos)
+      stepped_dynos
+    else
+      nil
+    end
 
   end
 
@@ -48,7 +78,6 @@ class HerokuMongoWatcher::Autoscaler
   def set_dynos(count)
     @last_scaled = Time.now
     t = Thread.new('Setting Dynos') do
-      puts "! Scaling -> #{count}"
       i = heroku.ps_scale(config[:heroku_appname], :type => 'web', :qty => count)
     end
     t.join
