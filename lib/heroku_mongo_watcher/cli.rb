@@ -1,7 +1,6 @@
 require 'heroku'
 require 'heroku_mongo_watcher'
 require 'heroku_mongo_watcher/configuration'
-require 'heroku_mongo_watcher/autoscaler'
 require 'heroku_mongo_watcher/mailer'
 require 'heroku_mongo_watcher/data_row'
 
@@ -13,10 +12,6 @@ class HerokuMongoWatcher::CLI
 
   def self.mailer
     HerokuMongoWatcher::Mailer.instance
-  end
-
-  def self.autoscaler
-    HerokuMongoWatcher::Autoscaler.instance
   end
 
   def self.heroku
@@ -59,8 +54,6 @@ class HerokuMongoWatcher::CLI
           @current_row.print_row
 
           check_and_notify
-
-          autoscale if config[:autoscale]
 
           @last_row = @current_row
           @current_row = HerokuMongoWatcher::DataRow.new
