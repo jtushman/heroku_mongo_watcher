@@ -43,12 +43,6 @@ class HerokuMongoWatcher::Autoscaler
     # 32,012 rpm => 32 dynos
     ideal_dynos = (rpm / options[:requests_per_dyno]).round
 
-    # Don't allow downscaling until 5 minutes
-    if ideal_dynos < current_dynos && (Time.now - last_scaled) < (5 * 60)
-      puts ">> will not downscale within 5 minutes"
-      return
-    end
-
     # return if the delta is less than 5 dynos | don't think I need to do this ...
     #return if (ideal_dynos - current_dynos).abs < options[:step]
 
@@ -62,8 +56,14 @@ class HerokuMongoWatcher::Autoscaler
     stepped_dynos = options[:min_dynos] if stepped_dynos < options[:min_dynos]
     stepped_dynos = options[:max_dynos] if stepped_dynos > options[:max_dynos]
 
+    # Don't allow downscaling until 5 minutes
+    if stepped_dynos < current_dynos && (Time.now - last_scaled) < (5 * 60)
+      puts ">> Current: [#{current_dynos}], Ideal: [#{stepped_dynos}] | will not downscale within 5 minutes"
+      return
+    end
+
     if stepped_dynos != current_dynos
-      #set_dynos(stepped_dynos)
+      set_dynos(stepped_dynos)
       stepped_dynos
     else
       nil
