@@ -76,6 +76,14 @@ locally
 *  `--print-errors` to print a summary of errors during each sample
 *  `--print-requests` to print a summary of requests during each sample
 
+##Experimental
+
+( you probably
+
+* `--autoscale` to autoscale dynos
+* `--min-dynos=n` to set the min default 6
+* `--max-dynos=n` to set the min default 50
+
 note: you can set these defaults in your .watcher file
 
 ## Contact

@@ -1,3 +1,3 @@
 module HerokuMongoWatcher
-  VERSION = "0.2.5.beta"
+  VERSION = "0.3.0"
 end
