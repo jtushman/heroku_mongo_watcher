@@ -80,4 +80,4 @@ note: you can set these defaults in your .watcher file
 
 ## Contact
 
-jtushman@pipeave.com
+jtushman@pipewave.com
