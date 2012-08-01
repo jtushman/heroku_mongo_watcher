@@ -7,9 +7,9 @@ class HerokuMongoWatcher::Autoscaler
 
   attr_reader :last_scaled, :options
 
-  def initialize(options={})
+  def initialize()
     @last_scaled = Time.now - 60
-    @options = default_options.merge(options)
+    @options = default_options.merge(config)
   end
 
   def default_options

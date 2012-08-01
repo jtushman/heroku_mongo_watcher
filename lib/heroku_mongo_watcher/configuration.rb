@@ -32,6 +32,8 @@ class HerokuMongoWatcher::Configuration
       opt :print_requests, "show aggregate requests summaries", default: false
       opt :interval, "frequency in seconds to poll mongostat and print out results", default: 60
       opt :autoscale, "autoscale dynos -- WARNING ONLY DO THIS IF YOU KNOW WHAT YOUR ARE DOING", default: false
+      opt :min_dynos, "For autoscaling, the minimum dynos to use", default: 6
+      opt :max_dynos, "For autoscaling, the max dynos to use", default: 50
     end
 
     @@config.merge!(opts)
